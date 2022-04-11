@@ -1,0 +1,35 @@
+use std::borrow::Borrow;
+
+use crate::node::Node;
+
+pub struct TreapMap<K, V> {
+    root: Option<Node<K, V>>,
+    len: usize,
+}
+
+impl<K, V> TreapMap<K, V> {
+    pub fn new() -> Self {
+        Self { root: None, len: 0 }
+    }
+
+    pub fn insert(&mut self, key: K, val: V) -> Option<V>
+    where
+        K: Ord,
+    {
+        todo!()
+    }
+
+    pub fn get<Q>(&self, key: &Q) -> Option<&V>
+    where
+        K: Borrow<Q> + Ord,
+        Q: Ord + ?Sized,
+    {
+        self.root.as_ref().and_then(|n| n.get(key))
+    }
+}
+
+impl<K, V> Default for TreapMap<K, V> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
