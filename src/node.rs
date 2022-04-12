@@ -1,4 +1,4 @@
-use std::borrow::Borrow;
+use std::{borrow::Borrow, cmp::Ordering};
 
 pub(crate) struct Node<K, V> {
     key: K,
@@ -30,6 +30,60 @@ impl<K, V> Node<K, V> {
             Ordering::Equal => Some(&self.val),
             Ordering::Less => self.left.as_ref().and_then(|n| n.get(key)),
             Ordering::Greater => self.right.as_ref().and_then(|n| n.get(key)),
+        }
+    }
+
+    pub fn insert(&mut self, key: K, val: V, priority: u64) -> Option<V>
+    where
+        K: Ord,
+    {
+        match key.cmp(&self.key) {
+            Ordering::Equal => {
+                if self.priority < priority {
+                    self.priority = priority;
+                }
+
+                // we don't update the key
+                // See rationale in std::collections::BtreeMap docs.
+                Some(std::mem::replace(&mut self.val, val))
+            }
+            Ordering::Less => {
+                let old_val = if let Some(ref mut left) = self.left {
+                    left.insert(key, val, priority)
+                } else {
+                    self.left = Some(Box::new(Node::new(key, val, priority)));
+                    None
+                };
+
+                if self.is_heap_property_violated(&self.left) {
+                    self.rotate_right();
+                }
+
+                old_val
+            }
+            Ordering::Greater => {
+                let old_val = if let Some(ref mut right) = self.right {
+                    right.insert(key, val, priority)
+                } else {
+                    self.right = Some(Box::new(Node::new(key, val, priority)));
+                    None
+                };
+
+                // TODO: restore heap invariant
+                if self.is_heap_property_violated(&self.right) {
+                    self.rotate_left();
+                }
+
+                old_val
+            }
+        }
+    }
+
+    fn is_heap_property_violated(&self, subtree: &Option<Box<Node<K, V>>>) -> bool {
+        if let Some(child) = subtree.as_ref() {
+            self.priority < child.priority
+        } else {
+            false
         }
     }
 

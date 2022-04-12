@@ -16,7 +16,22 @@ impl<K, V> TreapMap<K, V> {
     where
         K: Ord,
     {
-        todo!()
+        let priority = rand::random();
+
+        if let Some(root) = &mut self.root {
+            let res = root.insert(key, val, priority);
+
+            if res.is_none() {
+                self.len += 1;
+            }
+
+            res
+        } else {
+            self.root = Some(Node::new(key, val, priority));
+            self.len += 1;
+
+            None
+        }
     }
 
     pub fn get<Q>(&self, key: &Q) -> Option<&V>
